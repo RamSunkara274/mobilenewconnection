@@ -18,12 +18,12 @@ import com.demo.mobile.entity.Connections;
 import com.demo.mobile.entity.Plans;
 import com.demo.mobile.entity.Status;
 import com.demo.mobile.repository.ConnectionRepository;
+import com.demo.mobile.repository.CustomersRepository;
 import com.demo.mobile.repository.PlansRepository;
 import com.demo.mobile.repository.StatusRepository;
 import com.demo.mobile.serviceimpl.ConnectionServiceImpl;
 
 @RunWith(PowerMockRunner.class)
-
 public class ConnectionServiceImplTest {
 
 	@Mock
@@ -32,18 +32,19 @@ public class ConnectionServiceImplTest {
 	@InjectMocks
 	ConnectionServiceImpl connectionServiceImpl;
 
-	@InjectMocks
+	@Mock
 	StatusRepository statusRepo;
-	@InjectMocks
+	@Mock
 	PlansRepository plansRepo;
+
+	@Mock
+	CustomersRepository customerRepo;
 
 	@Test
 	public void findCustomerStatus() {
-
 		Status sts = new Status();
 		sts.setStatus("Approved");
-
-		Mockito.when(statusRepo.findByRequestId(7899787)).thenReturn(sts);
+		Mockito.when(statusRepo.findByRequestId(Mockito.anyInt())).thenReturn(sts);
 		assertEquals("Approved", sts.getStatus());
 	}
 
@@ -62,14 +63,12 @@ public class ConnectionServiceImplTest {
 	public void getAllConnections() {
 
 		Connections connectionEntity = new Connections();
+		connectionEntity.setNumber("98739097830");
+		List<Connections> listOfConnection = new ArrayList<Connections>();
+		listOfConnection.add(connectionEntity);
+		Mockito.when(connectionRepo.findAll()).thenReturn(listOfConnection);
+		assertEquals(1, listOfConnection.size());
 
-		List<Connections> listOfConnections = new ArrayList<Connections>();
-		connectionEntity.setNumber("90838377373");
-		listOfConnections.add(connectionEntity);
-		List<ConnectionsDto> listOfDto = new ArrayList<ConnectionsDto>();
-		Mockito.when(connectionRepo.findAll()).thenReturn(listOfConnections);
-
-		assertEquals(1, listOfConnections.size());
 	}
 
 }
