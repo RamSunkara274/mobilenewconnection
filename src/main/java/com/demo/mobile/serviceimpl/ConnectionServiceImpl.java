@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.modelmapper.ModelMapper;
+import org.omg.CORBA.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -19,14 +20,18 @@ import com.demo.mobile.dto.ConnectionsDto;
 import com.demo.mobile.dto.NewConnectionAppplication;
 import com.demo.mobile.dto.RequestsProjections;
 import com.demo.mobile.dto.ResponseDto;
+import com.demo.mobile.dto.UserStatus;
 import com.demo.mobile.entity.Connections;
 import com.demo.mobile.entity.Customers;
 import com.demo.mobile.entity.Plans;
 import com.demo.mobile.entity.Status;
+import com.demo.mobile.entity.UStatus;
+import com.demo.mobile.exception.AppException;
 import com.demo.mobile.repository.ConnectionRepository;
 import com.demo.mobile.repository.CustomersRepository;
 import com.demo.mobile.repository.PlansRepository;
 import com.demo.mobile.repository.StatusRepository;
+import com.demo.mobile.repository.UstatusRepository;
 import com.demo.mobile.service.ConnectionService;
 
 @Service
@@ -40,6 +45,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 	@Autowired
 	StatusRepository statusRepo;
+
+	@Autowired
+	UstatusRepository ustatusRepo;
 
 	@Autowired
 	PlansRepository plansRepo;
@@ -69,6 +77,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 		 */
 
 		// BeanUtils.copyProperties(listOfDto, listOfConnections);
+
 		return listOfDto;
 
 	}
@@ -100,7 +109,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 		Status statusEntity = new Status();
 		statusEntity.setRequestId(randomId);
-		statusEntity.setStatus("In Progress");
+		statusEntity.setStatus("In_Progress");
 		statusEntity.setDate(LocalDate.now());
 		Long customerId = customerEntity.getCustomerId();
 		statusEntity.setCustomerId(customerId);
@@ -145,16 +154,63 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 		Status statusEntity = statusRepo.findByRequestId(adminValidateDto.getRequestId());
 
-		statusEntity.setStatus(adminValidateDto.getStatus());
-		logger.info("admin validating the requtes whether it is valid or invalid in ConnectionServiceImpl class");
+		if (statusEntity.getStatus().equals("Approved") || statusEntity.getStatus().equals("Rejected")) {
+			ResponseDto responseDto = new ResponseDto();
 
-		statusRepo.save(statusEntity);
+			responseDto.setMessage("The admin already changed the status to " + statusEntity.getStatus()
+					+ "    Now you cannot change the status");
+			responseDto.setStatusCode(HttpStatus.BAD_REQUEST.value());
+			return responseDto;
+		}
 
-		ResponseDto responseDto = new ResponseDto();
+		if (adminValidateDto.getStatus().equals(UserStatus.In_Progress.name())
+				|| adminValidateDto.getStatus().equals(UserStatus.Approved.name())
+				|| adminValidateDto.getStatus().equals(UserStatus.Rejected.name())
+				|| adminValidateDto.getStatus().equals(UserStatus.Connection_Enabled.name())
+				|| adminValidateDto.getStatus().equals(UserStatus.Refer_Back.name())) {
 
-		responseDto.setMessage("The admin changed new connection status to " + adminValidateDto.getStatus());
-		responseDto.setStatusCode(HttpStatus.ACCEPTED.value());
-		return responseDto;
+			statusEntity.setStatus(adminValidateDto.getStatus());
+			logger.info("admin validating the requtes whether it is valid or invalid in ConnectionServiceImpl class");
+
+			statusRepo.save(statusEntity);
+
+			ResponseDto responseDto = new ResponseDto();
+
+			responseDto.setMessage("The admin changed new connection status to " + adminValidateDto.getStatus());
+			responseDto.setStatusCode(HttpStatus.ACCEPTED.value());
+			return responseDto;
+
+		} else {
+
+			ResponseDto response = new ResponseDto();
+
+			response.setMessage("Please enter the valid status");
+			response.setStatusCode(HttpStatus.BAD_REQUEST.value());
+			return response;
+
+		}
+
+		/*
+		 * if (statusEntity.getStatus().equals(UserStatus.In_Progress)) {
+		 * 
+		 * UStatus userStatus =
+		 * ustatusRepo.findByName(UserStatus.valueOf(adminValidateDto.getStatus(
+		 * ))) .orElseThrow(() -> new AppException("User Status not set.")); }
+		 */
+		/*
+		 * statusEntity.setStatus(adminValidateDto.getStatus()); logger.
+		 * info("admin validating the requtes whether it is valid or invalid in ConnectionServiceImpl class"
+		 * );
+		 * 
+		 * statusRepo.save(statusEntity);
+		 * 
+		 * ResponseDto responseDto = new ResponseDto();
+		 * 
+		 * responseDto.setMessage("The admin changed new connection status to "
+		 * + adminValidateDto.getStatus());
+		 * responseDto.setStatusCode(HttpStatus.ACCEPTED.value()); return
+		 * responseDto;
+		 */
 	}
 
 }

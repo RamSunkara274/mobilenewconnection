@@ -3,7 +3,6 @@ package com.demo.mobile.dto;
 public class AdminValidateRequestDto {
 	private int requestId;
 	private String status;
-	private Long customerId;
 
 	public int getRequestId() {
 		return requestId;
@@ -21,18 +20,9 @@ public class AdminValidateRequestDto {
 		this.status = status;
 	}
 
-	public Long getCustomerId() {
-		return customerId;
-	}
-
-	public void setCustomerId(Long customerId) {
-		this.customerId = customerId;
-	}
-
 	@Override
 	public String toString() {
-		return "AdminValidateRequestDto [requestId=" + requestId + ", status=" + status + ", customerId=" + customerId
-				+ "]";
+		return "AdminValidateRequestDto [requestId=" + requestId + ", status=" + status + "]";
 	}
 
 }
